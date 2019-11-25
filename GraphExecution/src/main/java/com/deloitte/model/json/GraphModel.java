@@ -15,16 +15,15 @@ import com.deloitte.model.Node;
  * @author vbejjanki
  *
  */
-@SuppressWarnings("rawtypes")
-public class GraphModel<T, R> {
+public class GraphModel {
 
 	private Set<Node> nodes = new HashSet<>();
 
 	private List<Edge> edges = new ArrayList<>();
 
-	private Node<T> rootNode;
+	private Node rootNode;
 
-	private Node<R> antiRootNode;
+	private Node antiRootNode;
 
 	public List<Edge> getEdges() {
 		return edges;
@@ -34,28 +33,28 @@ public class GraphModel<T, R> {
 		this.edges = edges;
 	}
 
-	public Node<T> getRootNode() {
-		return rootNode;
-	}
-
-	public void setRootNode(Node<T> rootNode) {
-		this.rootNode = rootNode;
-	}
-
-	public Node<R> getAntiRootNode() {
-		return antiRootNode;
-	}
-
-	public void setAntiRootNode(Node<R> antiRootNode) {
-		this.antiRootNode = antiRootNode;
-	}
-
 	public Set<Node> getNodes() {
 		return nodes;
 	}
 
 	public void setNodes(Set<Node> nodes) {
 		this.nodes = nodes;
+	}
+
+	public Node getRootNode() {
+		return rootNode;
+	}
+
+	public void setRootNode(Node rootNode) {
+		this.rootNode = rootNode;
+	}
+
+	public Node getAntiRootNode() {
+		return antiRootNode;
+	}
+
+	public void setAntiRootNode(Node antiRootNode) {
+		this.antiRootNode = antiRootNode;
 	}
 
 }

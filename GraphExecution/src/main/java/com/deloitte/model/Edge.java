@@ -3,37 +3,54 @@
  */
 package com.deloitte.model;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * @author vbejjanki
  *
  */
 
-@SuppressWarnings("rawtypes")
-public class Edge {
+public class Edge implements Comparable<Edge> {
 
-	private Node from;
+	private Node fromNode;
 
-	private Node to;
+	private Comparator<Node> nodesOrder = Comparator.comparing(Node::getStartTime,
+			Comparator.nullsLast(LocalDateTime::compareTo));
 
-	public Edge(Node from, Node to) {
-		this.from = from;
-		this.to = to;
+	private Set<Node> toNodes = new TreeSet<>(nodesOrder);
+
+	public Edge(Node fromNode, Node toNode) {
+		this.fromNode = fromNode;
+		this.getToNodes().add(toNode);
 	}
 
-	public Node getFrom() {
-		return from;
+	public Node getFromNode() {
+		return fromNode;
 	}
 
-	public void setFrom(Node from) {
-		this.from = from;
+	public void setFromNode(Node fromNode) {
+		this.fromNode = fromNode;
 	}
 
-	public Node getTo() {
-		return to;
+	public Set<Node> getToNodes() {
+		return toNodes;
 	}
 
-	public void setTo(Node to) {
-		this.to = to;
+	@Override
+	public int compareTo(Edge edge) {
+		int val = 0;
+
+		if (Objects.nonNull(this.getFromNode()) && Objects.nonNull(this.getFromNode().getStartTime())
+				&& Objects.nonNull(edge) && Objects.nonNull(edge.getFromNode())
+				&& Objects.nonNull(edge.getFromNode().getStartTime())) {
+			return this.fromNode.getStartTime().compareTo(edge.getFromNode().getStartTime());
+		}
+
+		return val;
 	}
 
 }

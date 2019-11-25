@@ -3,41 +3,66 @@
  */
 package com.deloitte.model;
 
-import com.deloitte.model.json.serialize.NodeSerializer;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /**
  * @author vbejjanki
  *
  */
-@JsonSerialize(using = NodeSerializer.class)
-public class Node<T> {
+public interface Node {
 
-	protected long nodeId;
-
-	protected T value;
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + (int) (nodeId ^ (nodeId >>> 32));
-		return result;
-	}
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Node other = (Node) obj;
-		if (nodeId != other.nodeId)
-			return false;
-		return true;
-	}
-
+	public long getNodeId();
+	
+	public long getTaskId();
+	
+	public long getExecutionId();
+	
+	public LocalDateTime getStartTime();
+	
+	@JsonIgnore
+	public boolean isReadyToRun();
+	
+	@JsonIgnore
+	public String getNodeType();
+	
+	@JsonIgnore
+	public List<Node> getChildrenNodesWithOrder();
+	
+	@JsonIgnore
+	public boolean hasParent();
+	
+	@JsonIgnore
+	public List<Node> getParentNodes();
+	
+	@JsonIgnore
+	public boolean hasChildren();
+	
+	@JsonIgnore
+	public boolean hasTimeConstraints();
+	
+	@JsonIgnore
+	public List<String> getConstraints();
+	
+	@JsonIgnore
+	public String getExecutionType();
+	
+	@JsonIgnore
+	public boolean isManualJob();
+	
+	@JsonIgnore
+	public String getExecutorInfo();
+	
+	@JsonIgnore
+	public void run();
+	
+	@JsonIgnore
+	public String getExecutionStatus();
+	
+	@JsonIgnore
+	public CompletableFuture<Task> getFuture();
+	
 }

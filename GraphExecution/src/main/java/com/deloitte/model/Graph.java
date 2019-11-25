@@ -13,7 +13,6 @@ import java.util.Map;
  *
  */
 
-@SuppressWarnings("rawtypes")
 public class Graph {
 
 	private Map<Node, List<Node>> graph = new HashMap<>();

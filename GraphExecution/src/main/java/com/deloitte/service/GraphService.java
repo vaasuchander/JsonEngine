@@ -4,20 +4,24 @@
 package com.deloitte.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 import org.springframework.stereotype.Service;
 
 import com.deloitte.model.Edge;
 import com.deloitte.model.NoActionNode;
 import com.deloitte.model.Node;
+import com.deloitte.model.PlayBook;
 import com.deloitte.model.Task;
 import com.deloitte.model.TaskExecutionNode;
 import com.deloitte.model.json.GraphModel;
@@ -28,30 +32,36 @@ import com.deloitte.model.json.GraphModel;
  */
 
 @Service
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class GraphService {
 
-	public GraphModel buildGraph(List<Task> tasksList) {
+	@Inject
+	private CacheService cService;
 
+	private AtomicLong seq = new AtomicLong(1);
+
+	public GraphModel buildGraph(PlayBook playBook) {
+
+		List<Task> tasksList = playBook.getTasks();
+		cService.setPlayBookTasks(playBook);
 		List<Object> entryPointCollection = new ArrayList<>();
 		List<Object> exitPointCollection = new ArrayList<>();
 		List<Edge> edges = new ArrayList<>();
 		Set<Node> nodes = new HashSet<>();
 
 		GraphModel graph = new GraphModel();
-		Node<Void> rootNode = new NoActionNode();
-		Node<Void> antiRootNode = new NoActionNode();
-		Node<Task> taskExecutionNode = null;
-		Node<Void> noActionNode = null;
+		Node rootNode = new NoActionNode(getLong(),  getLong());
+		Node antiRootNode = new NoActionNode(getLong(), getLong());
+		Node taskExecutionNode = null;
+		Node noActionNode = null;
 		Node entryPointNode = null;
-		//TODO Need to change the exitPointNode value
-		Node exitPointNode = new NoActionNode();
+		Node exitPointNode = new NoActionNode(getLong(), getLong());
 		Edge edge = null;
 
 		for (Task task : tasksList) {
-			taskExecutionNode = new TaskExecutionNode(task);
+			taskExecutionNode = new TaskExecutionNode(getLong(), task.getId(), getLong());
+			nodes.add(taskExecutionNode);
 			if (startToStartFilter(task)) {
-				noActionNode = new NoActionNode();
+				noActionNode = new NoActionNode(getLong(), getLong());
 				entryPointNode = noActionNode;
 				nodes.add(noActionNode);
 				nodes.add(entryPointNode);
@@ -63,7 +73,6 @@ public class GraphService {
 				entryPointCollection.add(taskExecutionNode);
 			}
 			entryPointCollection.add(entryPointNode);
-			// TODO Exit point Node Missing in Algorithm.
 			exitPointCollection.add(exitPointNode);
 			if (isDependentFilter(task)) {
 				nodes.add(rootNode);
@@ -72,7 +81,6 @@ public class GraphService {
 				edges.add(edge);
 			}
 			if (isIndependentFilter(task)) {
-				// TODO Exit point Node Missing in Algorithm.
 				nodes.add(exitPointNode);
 				nodes.add(antiRootNode);
 				edge = new Edge(exitPointNode, antiRootNode);
@@ -80,16 +88,14 @@ public class GraphService {
 			}
 		}
 
-		List<Task> predTaskList = tasksList.stream()
-				.filter(task -> Objects.nonNull(task.getPredecessorConstraint()))
+		List<Task> predTaskList = tasksList.stream().filter(task -> Objects.nonNull(task.getPredecessorConstraint()))
 				.collect(Collectors.toList());
-		Map<Long, Task> tasksMap = tasksList.stream().filter(Objects::nonNull)
-				.collect(Collectors.toMap(Task::getId, Function.identity(),(t1,t2) -> t1));
+		Map<Long, Task> tasksMap = cService.getMapTaskList(playBook.getId());
 
 		Task task1 = null;
 		Task task2 = null;
-		Node<Task> node1 = null;
-		Node<Task> node2 = null;
+		Node node1 = null;
+		Node node2 = null;
 
 		for (Task task : predTaskList) {
 			task1 = tasksMap.get(task.getPredecessorConstraint().getId());
@@ -101,24 +107,28 @@ public class GraphService {
 			edge = new Edge(node1, node2);
 			edges.add(edge);
 		}
-
 		graph.setRootNode(rootNode);
 		graph.setAntiRootNode(antiRootNode);
 		graph.setNodes(nodes);
+		Collections.sort(edges);
 		graph.setEdges(edges);
-
 		return graph;
 	}
 
 	private Node getExitPoint(Task task, List<Edge> edges) {
 		Node node = null;
+		Edge ed = null;
 		for (Edge edge : edges) {
-			if (Objects.nonNull(edge.getFrom())) {
-				long fromId = ((TaskExecutionNode) edge.getFrom()).getNodeId();
+			if (Objects.nonNull(edge.getFromNode())) {
+				long fromId = edge.getFromNode().getTaskId();
+				ed = edge;
 				if (fromId == task.getId()) {
-					node = edge.getTo();
+					node = edge.getToNodes().stream().findAny().get();
 				}
 			}
+		}
+		if(Objects.isNull(node)) {
+			node = ed.getToNodes().stream().findAny().get();
 		}
 		return node;
 	}
@@ -126,18 +136,22 @@ public class GraphService {
 	private Node getEntryPoint(Task task, List<Edge> edges) {
 		Node node = null;
 		for (Edge edge : edges) {
-			if (Objects.nonNull(edge.getTo())) {
-				long toId = ((TaskExecutionNode) edge.getFrom()).getNodeId();
-				if (toId == task.getId()) {
-					node = edge.getFrom();
+			if (Objects.nonNull(edge.getToNodes())) {
+				for (Node eNode : edge.getToNodes()) {
+					long toId = eNode.getTaskId();
+					if (toId == task.getId()) {
+						node = edge.getFromNode();
+					}
 				}
 			}
+		}
+		if(Objects.isNull(node)) {
+			node = new NoActionNode(getLong(), getLong());
 		}
 		return node;
 	}
 
 	private boolean startToStartFilter(Task task) {
-		
 		Predicate<Task> nullPredfilter = t -> Objects.nonNull(t.getPredecessorConstraint());
 		Predicate<Task> filter = t -> "start-to-start"
 				.equals(t.getPredecessorConstraint().getPredecessorConstraintType().getName());
@@ -152,8 +166,12 @@ public class GraphService {
 	}
 
 	private boolean isIndependentFilter(Task task) {
-		// TODO Independent Filter need to be Changed
-		Predicate<Task> isIndependent = t -> t.isParent();
+		Predicate<Task> isIndependent = t -> Objects.nonNull(t.getConstraintDateTime());
 		return isIndependent.test(task);
+	}
+
+	private long getLong() {
+
+		return seq.getAndIncrement();
 	}
 }
