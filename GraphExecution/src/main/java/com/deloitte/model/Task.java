@@ -5,6 +5,9 @@ package com.deloitte.model;
 
 import java.time.LocalDateTime;
 
+import com.deloitte.model.jsonSerialize.DateSerializer;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 /**
  * @author vbejjanki
  *
@@ -19,10 +22,13 @@ public class Task {
 
 	private boolean isManual;
 
+	@JsonSerialize(using = DateSerializer.class)
 	private LocalDateTime constraintDateTime;
 
+	@JsonSerialize(using = DateSerializer.class)
 	private LocalDateTime actualStartDateandTime;
 
+	@JsonSerialize(using = DateSerializer.class)
 	private LocalDateTime actualEndDateandTime;
 
 	private String memberName;
@@ -45,8 +51,10 @@ public class Task {
 
 	private int actualDuration;
 
+	@JsonSerialize(using = DateSerializer.class)
 	private LocalDateTime plannedStartDate;
 
+	@JsonSerialize(using = DateSerializer.class)
 	private LocalDateTime plannedEndDate;
 
 	private int plannedDuration;

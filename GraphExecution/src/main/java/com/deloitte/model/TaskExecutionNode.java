@@ -157,6 +157,7 @@ public class TaskExecutionNode implements Node {
 	}
 
 	public LocalDateTime getStartTime() {
+		
 		return startTime;
 	}
 

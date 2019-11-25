@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.deloitte.model.jsonSerialize.DateSerializer;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * @author vbejjanki
@@ -21,6 +23,7 @@ public interface Node {
 	
 	public long getExecutionId();
 	
+	@JsonSerialize(using = DateSerializer.class)
 	public LocalDateTime getStartTime();
 	
 	@JsonIgnore
