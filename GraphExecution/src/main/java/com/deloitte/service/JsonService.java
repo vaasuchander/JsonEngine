@@ -5,6 +5,7 @@ package com.deloitte.service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
@@ -41,7 +42,6 @@ public class JsonService {
 	AtomicLong seq = new AtomicLong();
 
 	public String exec(final PlayBook playBook) {
-
 		final GraphModel graphModel = graphService.buildGraph(playBook);
 		String json = null;
 		try {
@@ -50,24 +50,20 @@ public class JsonService {
 		} catch (JsonProcessingException e) {
 			log.warning("The Json Parsing has been Failed.");
 		}
-		
 		log.info("The Graph Json: " +json);
-		
 		return json;
 	}
 
-	private GraphJson processJson(GraphModel graphModel, long playBookId) {
-
+	public GraphJson processJson(GraphModel graphModel, long playBookId) {
 		GraphJson gJson = new GraphJson();
 		gJson.setExecutionGraph(graphModel);
 		Map<Long, Task> mapTasks = cService.getMapTaskList(playBookId);
 		Map<Long,Task> execTasks =  new HashMap<>();
 		for(Node node: graphModel.getNodes()) {
-			execTasks.putIfAbsent(node.getExecutionId(), mapTasks.get(node.getTaskId()));
+			if(Objects.nonNull(mapTasks.get(node.getTaskId()))) {
+				execTasks.putIfAbsent(node.getExecutionId(), mapTasks.get(node.getTaskId()));
+			}
 		}
-		
-		
-		//Map<Long,Task> execTasks = graphModel.getNodes().stream().collect(Collectors.toMap(Node::getExecutionId, s -> mapTasks.getOrDefault(s.getTaskId(),)));
 		gJson.setMetadata(execTasks);
 		return gJson;
 	}

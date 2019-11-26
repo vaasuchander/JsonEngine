@@ -2,6 +2,7 @@ package com.deloitte;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,8 +11,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class GraphExecutionApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(GraphExecutionApplication.class, args);
-		
+		ApplicationContext applicationContext = SpringApplication.run(GraphExecutionApplication.class, args);
+		//applicationContext.getBean(RequestMappingHandlerMapping.class).getHandlerMethods().forEach( () -> s.);
 	}
 
 	@Bean

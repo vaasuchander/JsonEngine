@@ -15,26 +15,26 @@ import java.util.Map;
 
 public class Graph {
 
-	private Map<Node, List<Node>> graph = new HashMap<>();
+	private Map<Node, List<Node>> toVertex = new HashMap<>();
+
+	private Map<Node, List<Node>> fromVertex = new HashMap<>();
 
 	public void addEdge(Node to, Node from) {
-		getGraph().get(to).add(from);
+		toVertex.get(to).add(from);
+		fromVertex.get(from).add(to);
 	}
 
 	public void addNode(Node value) {
-		getGraph().putIfAbsent(value, new ArrayList<>());
+		toVertex.putIfAbsent(value, new ArrayList<>());
+		fromVertex.putIfAbsent(value, new ArrayList<>());
 	}
 
-	public List<Node> getAdjNodes(Node node) {
-		return graph.get(node);
+	public Node getEntryNode(Node node) {
+		return toVertex.get(node).get(0);
 	}
 
-	public Map<Node, List<Node>> getGraph() {
-		return graph;
-	}
-
-	public void setGraph(Map<Node, List<Node>> graph) {
-		this.graph = graph;
+	public Node getExitNode(Node node) {
+		return fromVertex.get(node).get(0);
 	}
 
 }
